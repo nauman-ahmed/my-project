@@ -236,7 +236,125 @@ async function importAuthors() {
   }
 }
 
+async function setupLocales() {
+  try {
+    // Check if i18n plugin is available
+    const i18nPlugin = strapi.plugin('i18n');
+    if (!i18nPlugin) {
+      console.log('i18n plugin not found, skipping locale setup');
+      return;
+    }
+
+    const defaultLocale = await strapi.query('plugin::i18n.locale').findOne({
+      where: { code: 'en' },
+    });
+
+    if (!defaultLocale) {
+      await strapi.query('plugin::i18n.locale').create({
+        data: {
+          name: 'English',
+          code: 'en',
+          isDefault: true,
+        },
+      });
+      console.log('✓ Created default locale: en');
+    }
+
+    const locales = [
+      { name: 'French', code: 'fr' },
+      { name: 'Spanish', code: 'es' },
+    ];
+
+    for (const locale of locales) {
+      const existing = await strapi.query('plugin::i18n.locale').findOne({
+        where: { code: locale.code },
+      });
+
+      if (!existing) {
+        await strapi.query('plugin::i18n.locale').create({
+          data: {
+            name: locale.name,
+            code: locale.code,
+            isDefault: false,
+          },
+        });
+        console.log(`✓ Created locale: ${locale.code}`);
+      }
+    }
+  } catch (error) {
+    console.log('Could not setup locales (i18n plugin may not be installed):', error.message);
+  }
+}
+
+async function importEvents() {
+  const demoEvents = [
+    {
+      title: 'Summer Conference 2024',
+      slug: 'summer-conference-2024',
+      description: 'Join us for our annual summer conference featuring keynote speakers and workshops.',
+      startDate: new Date('2024-07-15T09:00:00Z'),
+      endDate: new Date('2024-07-17T17:00:00Z'),
+      location: 'Convention Center, New York',
+      isActive: true,
+    },
+    {
+      title: 'Tech Workshop Series',
+      slug: 'tech-workshop-series',
+      description: 'A series of workshops covering the latest in web development and cloud technologies.',
+      startDate: new Date('2024-08-01T10:00:00Z'),
+      endDate: new Date('2024-08-01T16:00:00Z'),
+      location: 'Tech Hub, San Francisco',
+      isActive: true,
+    },
+    {
+      title: 'Annual Gala Dinner',
+      slug: 'annual-gala-dinner',
+      description: 'Celebrate the year with our annual gala dinner and awards ceremony.',
+      startDate: new Date('2024-12-10T19:00:00Z'),
+      endDate: new Date('2024-12-10T23:00:00Z'),
+      location: 'Grand Ballroom, Chicago',
+      isActive: true,
+    },
+  ];
+
+  for (const event of demoEvents) {
+    await createEntry({
+      model: 'event',
+      entry: {
+        ...event,
+        publishedAt: Date.now(),
+      },
+    });
+  }
+
+  console.log('✓ Created demo events');
+}
+
+async function importAdmissionForm() {
+  const sampleAdmission = {
+    firstName: 'John',
+    lastName: 'Doe',
+    email: 'john.doe@example.com',
+    phone: '+1-555-0123',
+    dateOfBirth: new Date('2000-01-15'),
+    address: '123 Main Street, New York, NY 10001',
+    program: 'Computer Science',
+    message: 'I am very interested in joining your program and would like to learn more about the admission process.',
+    status: 'pending',
+  };
+
+  await createEntry({
+    model: 'admission-form',
+    entry: sampleAdmission,
+  });
+
+  console.log('✓ Created sample Admission Form');
+}
+
 async function importSeedData() {
+  // Setup locales (if i18n plugin is available)
+  await setupLocales();
+
   // Allow read of application content types
   await setPublicPermissions({
     article: ['find', 'findOne'],
@@ -244,6 +362,7 @@ async function importSeedData() {
     author: ['find', 'findOne'],
     global: ['find', 'findOne'],
     about: ['find', 'findOne'],
+    event: ['find', 'findOne'],
   });
 
   // Create all entries
@@ -252,6 +371,8 @@ async function importSeedData() {
   await importArticles();
   await importGlobal();
   await importAbout();
+  await importEvents();
+  await importAdmissionForm();
 }
 
 async function main() {

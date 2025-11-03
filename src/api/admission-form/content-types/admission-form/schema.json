@@ -1,0 +1,49 @@
+{
+  "kind": "collectionType",
+  "collectionName": "admission_forms",
+  "info": {
+    "singularName": "admission-form",
+    "pluralName": "admission-forms",
+    "displayName": "Admission Form",
+    "description": "Admission form submissions"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "firstName": {
+      "type": "string",
+      "required": true
+    },
+    "lastName": {
+      "type": "string",
+      "required": true
+    },
+    "email": {
+      "type": "email",
+      "required": true
+    },
+    "phone": {
+      "type": "string"
+    },
+    "dateOfBirth": {
+      "type": "date"
+    },
+    "address": {
+      "type": "text"
+    },
+    "program": {
+      "type": "string"
+    },
+    "message": {
+      "type": "text"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["pending", "reviewed", "approved", "rejected"],
+      "default": "pending"
+    }
+  }
+}
+

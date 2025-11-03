@@ -10,6 +10,8 @@
     "dev": "strapi develop",
     "develop": "strapi develop",
     "seed:example": "node ./scripts/seed.js",
+    "seed": "node ./scripts/seed.js",
+    "setup:rbac": "node ./scripts/setup-rbac.js",
     "start": "strapi start",
     "strapi": "strapi",
     "upgrade": "npx @strapi/upgrade latest",
@@ -17,6 +19,7 @@
   },
   "dependencies": {
     "@strapi/plugin-cloud": "5.30.0",
+    "@strapi/plugin-documentation": "^5.30.0",
     "@strapi/plugin-users-permissions": "5.30.0",
     "@strapi/strapi": "5.30.0",
     "fs-extra": "^10.0.0",
@@ -27,7 +30,6 @@
     "react-router-dom": "^6.0.0",
     "styled-components": "^6.0.0"
   },
-  "devDependencies": {},
   "engines": {
     "node": ">=18.0.0 <=22.x.x",
     "npm": ">=6.0.0"
