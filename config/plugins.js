@@ -1,4 +1,4 @@
-module.exports = () => ({
+module.exports = ({ env }) => ({
   documentation: {
     enabled: true,
     config: {
