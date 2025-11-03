@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2025-11-03T18:41:45.537Z"
+    "x-generation-date": "2025-11-03T18:53:13.433Z"
   },
   "servers": [
     {
@@ -9686,29 +9686,32 @@
           "data": {
             "required": [
               "title",
-              "slug",
-              "startDate"
+              "startAt",
+              "slug"
             ],
             "type": "object",
             "properties": {
               "title": {
                 "type": "string"
               },
-              "slug": {
-                "type": "string"
-              },
               "description": {
                 "type": "string"
               },
-              "startDate": {
+              "startAt": {
                 "type": "string",
                 "format": "date-time"
               },
-              "endDate": {
+              "endAt": {
                 "type": "string",
                 "format": "date-time"
+              },
+              "allDay": {
+                "type": "boolean"
               },
               "location": {
+                "type": "string"
+              },
+              "slug": {
                 "type": "string"
               },
               "cover": {
@@ -9722,8 +9725,12 @@
                 ],
                 "example": "string or id"
               },
-              "isActive": {
-                "type": "boolean"
+              "status": {
+                "type": "string",
+                "enum": [
+                  "draft",
+                  "published"
+                ]
               },
               "locale": {
                 "type": "string"
@@ -9785,8 +9792,8 @@
         "type": "object",
         "required": [
           "title",
-          "slug",
-          "startDate"
+          "startAt",
+          "slug"
         ],
         "properties": {
           "id": {
@@ -9798,21 +9805,24 @@
           "title": {
             "type": "string"
           },
-          "slug": {
-            "type": "string"
-          },
           "description": {
             "type": "string"
           },
-          "startDate": {
+          "startAt": {
             "type": "string",
             "format": "date-time"
           },
-          "endDate": {
+          "endAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "allDay": {
+            "type": "boolean"
           },
           "location": {
+            "type": "string"
+          },
+          "slug": {
             "type": "string"
           },
           "cover": {
@@ -10413,8 +10423,12 @@
               }
             }
           },
-          "isActive": {
-            "type": "boolean"
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published"
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -10467,21 +10481,24 @@
                 "title": {
                   "type": "string"
                 },
-                "slug": {
-                  "type": "string"
-                },
                 "description": {
                   "type": "string"
                 },
-                "startDate": {
+                "startAt": {
                   "type": "string",
                   "format": "date-time"
                 },
-                "endDate": {
+                "endAt": {
                   "type": "string",
                   "format": "date-time"
+                },
+                "allDay": {
+                  "type": "boolean"
                 },
                 "location": {
+                  "type": "string"
+                },
+                "slug": {
                   "type": "string"
                 },
                 "cover": {
@@ -10613,8 +10630,12 @@
                     }
                   }
                 },
-                "isActive": {
-                  "type": "boolean"
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "draft",
+                    "published"
+                  ]
                 },
                 "createdAt": {
                   "type": "string",

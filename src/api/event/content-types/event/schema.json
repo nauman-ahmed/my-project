@@ -20,23 +20,30 @@
       "type": "string",
       "required": true
     },
+    "description": {
+      "type": "richtext",
+      "required": false
+    },
+    "startAt": {
+      "type": "datetime",
+      "required": true
+    },
+    "endAt": {
+      "type": "datetime",
+      "required": false
+    },
+    "allDay": {
+      "type": "boolean",
+      "default": false
+    },
+    "location": {
+      "type": "string",
+      "required": false
+    },
     "slug": {
       "type": "uid",
       "targetField": "title",
       "required": true
-    },
-    "description": {
-      "type": "text"
-    },
-    "startDate": {
-      "type": "datetime",
-      "required": true
-    },
-    "endDate": {
-      "type": "datetime"
-    },
-    "location": {
-      "type": "string"
     },
     "cover": {
       "type": "media",
@@ -44,9 +51,10 @@
       "required": false,
       "allowedTypes": ["images", "files", "videos"]
     },
-    "isActive": {
-      "type": "boolean",
-      "default": true
+    "status": {
+      "type": "enumeration",
+      "enum": ["draft", "published"],
+      "default": "draft"
     }
   }
 }
