@@ -12,6 +12,7 @@
     "seed:example": "node ./scripts/seed.js",
     "seed": "node ./scripts/seed.js",
     "setup:rbac": "node ./scripts/setup-rbac.js",
+    "bootstrap:locales": "npx ts-node ./scripts/bootstrap-locales.ts",
     "start": "strapi start",
     "strapi": "strapi",
     "upgrade": "npx @strapi/upgrade latest",

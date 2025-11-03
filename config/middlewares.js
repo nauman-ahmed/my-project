@@ -5,6 +5,11 @@ module.exports = [
   'strapi::cors',
   'strapi::poweredBy',
   'strapi::query',
+  {
+    name: 'global::locale-negotiation',
+    config: {},
+    resolve: './src/middlewares/locale-negotiation',
+  },
   'strapi::body',
   'strapi::session',
   'strapi::favicon',

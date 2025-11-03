@@ -261,8 +261,9 @@ async function setupLocales() {
     }
 
     const locales = [
-      { name: 'French', code: 'fr' },
-      { name: 'Spanish', code: 'es' },
+      { name: 'Urdu', code: 'ur' },
+      { name: 'Arabic', code: 'ar' },
+      { name: 'Persian', code: 'fa' },
     ];
 
     for (const locale of locales) {
@@ -283,6 +284,174 @@ async function setupLocales() {
     }
   } catch (error) {
     console.log('Could not setup locales (i18n plugin may not be installed):', error.message);
+  }
+}
+
+// Create translation for an entry
+async function createTranslation({ model, entryId, locale, data }) {
+  try {
+    const i18nService = strapi.plugin('i18n').service('localizations');
+    
+    // Get the base entry
+    const baseEntry = await strapi.documents(`api::${model}.${model}`).findOne({
+      documentId: entryId,
+    });
+    
+    if (!baseEntry) {
+      console.error(`Base entry not found for ${model} with documentId: ${entryId}`);
+      return null;
+    }
+
+    // Create the localization
+    const localization = await i18nService.createLocalization(
+      {
+        documentId: entryId,
+        locale,
+      },
+      data
+    );
+    
+    return localization;
+  } catch (error) {
+    // Fallback: try creating entry directly with locale
+    try {
+      const entry = await strapi.documents(`api::${model}.${model}`).create({
+        data: {
+          ...data,
+          locale,
+        },
+        locale,
+      });
+      return entry;
+    } catch (fallbackError) {
+      console.error(`Error creating translation for ${model} (${locale}):`, error.message);
+      return null;
+    }
+  }
+}
+
+// Seed translations for at least one entry per content type
+async function seedTranslations() {
+  try {
+    console.log('\nSeeding translations...');
+
+    // Check if i18n plugin is available
+    const i18nPlugin = strapi.plugin('i18n');
+    if (!i18nPlugin) {
+      console.log('⚠️  i18n plugin not found, skipping translations');
+      return;
+    }
+
+    const locales = ['ur', 'ar', 'fa'];
+    
+    // Get first article and create translations
+    const firstArticle = await strapi.query('api::article.article').findOne({
+      where: { locale: 'en' },
+      orderBy: { createdAt: 'ASC' },
+    });
+    
+    if (firstArticle) {
+      for (const locale of locales) {
+        await createTranslation({
+          model: 'article',
+          entryId: firstArticle.documentId,
+          locale,
+          data: {
+            title: `عنوان المقال - ${locale === 'ar' ? 'عربي' : locale === 'ur' ? 'اردو' : 'فارسی'}`,
+            description: `وصف المقال - ${locale === 'ar' ? 'عربي' : locale === 'ur' ? 'اردو' : 'فارسی'}`,
+            publishedAt: Date.now(),
+          },
+        });
+      }
+      console.log('✓ Created translations for article');
+    }
+
+    // Get first event and create translations
+    const firstEvent = await strapi.query('api::event.event').findOne({
+      where: { locale: 'en' },
+      orderBy: { createdAt: 'ASC' },
+    });
+    
+    if (firstEvent) {
+      for (const locale of locales) {
+        await createTranslation({
+          model: 'event',
+          entryId: firstEvent.documentId,
+          locale,
+          data: {
+            title: `عنوان الحدث - ${locale === 'ar' ? 'عربي' : locale === 'ur' ? 'اردو' : 'فارسی'}`,
+            description: `وصف الحدث - ${locale === 'ar' ? 'عربي' : locale === 'ur' ? 'اردو' : 'فارسی'}`,
+            location: locale === 'ar' ? 'الموقع' : locale === 'ur' ? 'مقام' : 'مکان',
+            publishedAt: Date.now(),
+          },
+        });
+      }
+      console.log('✓ Created translations for event');
+    }
+
+    // Get first category and create translations
+    const firstCategory = await strapi.query('api::category.category').findOne({
+      where: { locale: 'en' },
+      orderBy: { createdAt: 'ASC' },
+    });
+    
+    if (firstCategory) {
+      for (const locale of locales) {
+        await createTranslation({
+          model: 'category',
+          entryId: firstCategory.documentId,
+          locale,
+          data: {
+            name: locale === 'ar' ? 'الفئة' : locale === 'ur' ? 'قسم' : 'دسته‌بندی',
+            description: locale === 'ar' ? 'وصف الفئة' : locale === 'ur' ? 'قسم کی تفصیل' : 'توضیحات دسته‌بندی',
+          },
+        });
+      }
+      console.log('✓ Created translations for category');
+    }
+
+    // Get about entry and create translations
+    const aboutEntry = await strapi.query('api::about.about').findOne({
+      where: { locale: 'en' },
+    });
+    
+    if (aboutEntry) {
+      for (const locale of locales) {
+        await createTranslation({
+          model: 'about',
+          entryId: aboutEntry.documentId,
+          locale,
+          data: {
+            title: locale === 'ar' ? 'حول' : locale === 'ur' ? 'متعلق' : 'درباره',
+          },
+        });
+      }
+      console.log('✓ Created translations for about');
+    }
+
+    // Get global entry and create translations
+    const globalEntry = await strapi.query('api::global.global').findOne({
+      where: { locale: 'en' },
+    });
+    
+    if (globalEntry) {
+      for (const locale of locales) {
+        await createTranslation({
+          model: 'global',
+          entryId: globalEntry.documentId,
+          locale,
+          data: {
+            siteName: locale === 'ar' ? 'اسم الموقع' : locale === 'ur' ? 'سائٹ کا نام' : 'نام سایت',
+            siteDescription: locale === 'ar' ? 'وصف الموقع' : locale === 'ur' ? 'سائٹ کی تفصیل' : 'توضیحات سایت',
+          },
+        });
+      }
+      console.log('✓ Created translations for global');
+    }
+
+    console.log('✓ Translations seeded successfully');
+  } catch (error) {
+    console.log('⚠️  Could not seed translations:', error.message);
   }
 }
 
@@ -373,6 +542,9 @@ async function importSeedData() {
   await importAbout();
   await importEvents();
   await importAdmissionForm();
+
+  // Seed translations for at least one entry per content type
+  await seedTranslations();
 }
 
 async function main() {
