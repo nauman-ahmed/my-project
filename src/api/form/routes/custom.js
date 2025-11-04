@@ -13,7 +13,7 @@ module.exports = {
       config: {
         auth: false,
         policies: [],
-        middlewares: [],
+        middlewares: ['global::locale-negotiation'],
       },
     },
     {
@@ -23,7 +23,7 @@ module.exports = {
       config: {
         auth: false,
         policies: [],
-        middlewares: [],
+        middlewares: ['global::locale-negotiation'],
       },
     },
   ],

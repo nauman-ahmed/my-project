@@ -7,10 +7,16 @@
 const { createCoreService } = require('@strapi/strapi').factories;
 
 module.exports = createCoreService('api::form.form', ({ strapi }) => ({
-  async findBySlug(slug) {
-    const forms = await strapi.entityService.findMany('api::form.form', {
-      filters: { slug, active: true, publishedAt: { $notNull: true } },
+  async findBySlug(slug, locale = 'en') {
+    // Use documents API to query published forms in Strapi 5
+    const forms = await strapi.documents('api::form.form').findMany({
+      filters: { 
+        slug, 
+        active: true,
+      },
       populate: ['fields'],
+      locale: locale,
+      status: 'published',
     });
 
     if (!forms || forms.length === 0) {

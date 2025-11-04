@@ -512,6 +512,11 @@ export interface ApiAdmissionFormAdmissionForm
   options: {
     draftAndPublish: false;
   };
+  pluginOptions: {
+    i18n: {
+      localized: true;
+    };
+  };
   attributes: {
     address: Schema.Attribute.Text;
     createdAt: Schema.Attribute.DateTime;
@@ -521,12 +526,11 @@ export interface ApiAdmissionFormAdmissionForm
     email: Schema.Attribute.Email & Schema.Attribute.Required;
     firstName: Schema.Attribute.String & Schema.Attribute.Required;
     lastName: Schema.Attribute.String & Schema.Attribute.Required;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    locale: Schema.Attribute.String;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::admission-form.admission-form'
-    > &
-      Schema.Attribute.Private;
+    >;
     message: Schema.Attribute.Text;
     phone: Schema.Attribute.String;
     program: Schema.Attribute.String;
@@ -742,6 +746,11 @@ export interface ApiFormForm extends Struct.CollectionTypeSchema {
   options: {
     draftAndPublish: true;
   };
+  pluginOptions: {
+    i18n: {
+      localized: true;
+    };
+  };
   attributes: {
     active: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     createdAt: Schema.Attribute.DateTime;
@@ -750,9 +759,8 @@ export interface ApiFormForm extends Struct.CollectionTypeSchema {
     description: Schema.Attribute.Text;
     fields: Schema.Attribute.Component<'form.field', true> &
       Schema.Attribute.Required;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<'oneToMany', 'api::form.form'> &
-      Schema.Attribute.Private;
+    locale: Schema.Attribute.String;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::form.form'>;
     name: Schema.Attribute.String & Schema.Attribute.Required;
     notificationEmails: Schema.Attribute.JSON;
     publishedAt: Schema.Attribute.DateTime;

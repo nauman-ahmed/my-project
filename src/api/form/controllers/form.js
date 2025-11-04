@@ -2,19 +2,67 @@
 
 /**
  * form controller
+ * Supports localization for forms: en, ur, ar, fa
  */
 
 const { createCoreController } = require('@strapi/strapi').factories;
 
-module.exports = createCoreController('api::form.form', ({ strapi }) => ({
-  async findBySlug(ctx) {
-    const { slug } = ctx.params;
+module.exports = createCoreController('api::form.form', ({ strapi }) => {
+  // Supported locales
+  const SUPPORTED_LOCALES = ['en', 'ur', 'ar', 'fa'];
+  const DEFAULT_LOCALE = 'en';
 
-    const form = await strapi.service('api::form.form').findBySlug(slug);
-
-    if (!form) {
-      return ctx.notFound('Form not found');
+  // Helper function to validate and normalize locale
+  const validateLocale = (locale) => {
+    if (!locale) {
+      return DEFAULT_LOCALE;
     }
+    const normalizedLocale = String(locale).toLowerCase().trim();
+    if (SUPPORTED_LOCALES.includes(normalizedLocale)) {
+      return normalizedLocale;
+    }
+    // Fallback to default if invalid locale
+    return DEFAULT_LOCALE;
+  };
+
+  return {
+    async findBySlug(ctx) {
+      const { slug } = ctx.params;
+      const { query } = ctx;
+      
+      // Extract locale from query parameter or Accept-Language header
+      let locale = query.locale;
+      if (!locale && ctx.request.headers['accept-language']) {
+        const acceptLanguage = ctx.request.headers['accept-language'];
+        const languages = acceptLanguage
+          .split(',')
+          .map(lang => {
+            const [code] = lang.trim().split(';q=');
+            return code.split('-')[0].toLowerCase();
+          });
+        
+        for (const lang of languages) {
+          if (SUPPORTED_LOCALES.includes(lang)) {
+            locale = lang;
+            break;
+          }
+        }
+      }
+      
+      // Validate and normalize locale
+      const validatedLocale = validateLocale(locale);
+      
+      // Try to find form in requested locale
+      let form = await strapi.service('api::form.form').findBySlug(slug, validatedLocale);
+      
+      // If not found in requested locale and requested locale is not default, try default locale
+      if (!form && validatedLocale !== DEFAULT_LOCALE) {
+        form = await strapi.service('api::form.form').findBySlug(slug, DEFAULT_LOCALE);
+      }
+
+      if (!form) {
+        return ctx.notFound('Form not found');
+      }
 
     // Return only public fields (no PII, no admin-only fields)
     const publicFields = form.fields.filter((field) => field.visibility === 'public');
@@ -63,10 +111,32 @@ module.exports = createCoreController('api::form.form', ({ strapi }) => ({
     const files = ctx.request.files || {};
     const ip = ctx.request.ip || ctx.request.headers['x-forwarded-for'] || 'unknown';
     const userAgent = ctx.request.headers['user-agent'] || 'unknown';
-    const locale = ctx.request.headers['accept-language'] || 'en';
+    
+    // Extract locale from query parameter or Accept-Language header for submission tracking
+    let locale = ctx.query.locale;
+    if (!locale && ctx.request.headers['accept-language']) {
+      const acceptLanguage = ctx.request.headers['accept-language'];
+      const languages = acceptLanguage
+        .split(',')
+        .map(lang => {
+          const [code] = lang.trim().split(';q=');
+          return code.split('-')[0].toLowerCase();
+        });
+      
+      for (const lang of languages) {
+        if (SUPPORTED_LOCALES.includes(lang)) {
+          locale = lang;
+          break;
+        }
+      }
+    }
+    const validatedLocale = validateLocale(locale);
 
-    // Find the form
-    const form = await strapi.service('api::form.form').findBySlug(slug);
+    // Find the form in the requested locale (with fallback to default)
+    let form = await strapi.service('api::form.form').findBySlug(slug, validatedLocale);
+    if (!form && validatedLocale !== DEFAULT_LOCALE) {
+      form = await strapi.service('api::form.form').findBySlug(slug, DEFAULT_LOCALE);
+    }
 
     if (!form) {
       return ctx.notFound('Form not found');
@@ -115,7 +185,7 @@ module.exports = createCoreController('api::form.form', ({ strapi }) => ({
               const uploaded = await strapi.plugins['upload'].services.upload.upload({
                 data: {
                   fileInfo: {
-                    name: file.name || `file-${Date.now()}`,
+                    name: (file && typeof file === 'object' && 'name' in file) ? file.name : `file-${Date.now()}`,
                     alternativeText: field.label,
                     caption: field.label,
                   },
@@ -137,16 +207,24 @@ module.exports = createCoreController('api::form.form', ({ strapi }) => ({
     }
 
     // Create submission
+    /** @type {any} */
+    const submissionData = {
+      form: form.id,
+      data: data || {},
+      submittedAt: new Date(),
+      files: uploadedFiles.map(f => {
+        if (f && typeof f === 'object' && 'id' in f) {
+          return f.id;
+        }
+        return f;
+      }).filter(f => f != null),
+      ip: ip || 'unknown',
+      userAgent: userAgent || 'unknown',
+      locale: validatedLocale,
+    };
+    
     let submission = await strapi.entityService.create('api::form-submission.form-submission', {
-      data: {
-        form: form.id,
-        data,
-        submittedAt: new Date(),
-        files: uploadedFiles.map(f => f.id || f),
-        ip,
-        userAgent,
-        locale,
-      },
+      data: submissionData,
       populate: ['form'],
     });
 
@@ -183,5 +261,6 @@ module.exports = createCoreController('api::form.form', ({ strapi }) => ({
       message: form.successMessage || 'Thank you for your submission!',
     };
   },
-}));
+  };
+});
 
