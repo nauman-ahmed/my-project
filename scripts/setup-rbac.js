@@ -106,15 +106,62 @@ async function setupRBAC() {
     console.log('✓ Granted Content Editor permissions (no delete)');
 
     // Lock public permissions - only allow read for specific endpoints
+    // IMPORTANT: Preserve authentication permissions so users can login/register
     const publicRole = await strapi.query('plugin::users-permissions.role').findOne({
       where: { type: 'public' },
     });
 
     if (publicRole) {
-      // Clear all existing public permissions
-      await strapi.query('plugin::users-permissions.permission').delete({
+      // Get all existing public permissions
+      const allPublicPermissions = await strapi.query('plugin::users-permissions.permission').findMany({
         where: { role: publicRole.id },
       });
+
+      // Preserve authentication permissions (login, register, etc.)
+      const authPermissions = allPublicPermissions.filter((perm) =>
+        perm.action.startsWith('plugin::users-permissions.auth.')
+      );
+
+      // Delete only content-type related permissions (not auth permissions)
+      const contentTypePermissions = allPublicPermissions.filter(
+        (perm) => !perm.action.startsWith('plugin::users-permissions.auth.')
+      );
+
+      for (const perm of contentTypePermissions) {
+        await strapi.query('plugin::users-permissions.permission').delete({
+          where: { id: perm.id },
+        });
+      }
+
+      // Ensure authentication permissions are enabled
+      const authActions = [
+        'plugin::users-permissions.auth.callback',
+        'plugin::users-permissions.auth.connect',
+        'plugin::users-permissions.auth.emailConfirmation',
+        'plugin::users-permissions.auth.forgotPassword',
+        'plugin::users-permissions.auth.local',
+        'plugin::users-permissions.auth.register',
+        'plugin::users-permissions.auth.resetPassword',
+        'plugin::users-permissions.auth.sendEmailConfirmation',
+      ];
+
+      for (const action of authActions) {
+        const existing = await strapi.query('plugin::users-permissions.permission').findOne({
+          where: {
+            action: action,
+            role: publicRole.id,
+          },
+        });
+
+        if (!existing) {
+          await strapi.query('plugin::users-permissions.permission').create({
+            data: {
+              action: action,
+              role: publicRole.id,
+            },
+          });
+        }
+      }
 
       // Only allow read access to these content types
       const publicReadContentTypes = [
@@ -124,6 +171,7 @@ async function setupRBAC() {
         'api::about.about',
         'api::global.global',
         'api::event.event',
+        'api::admission-form.admission-form',
       ];
 
       for (const contentType of publicReadContentTypes) {
@@ -149,8 +197,8 @@ async function setupRBAC() {
       }
 
       console.log('✓ Locked public permissions - only read access granted');
-      console.log('  Public can read: articles, authors, categories, about, global, events');
-      console.log('  Public cannot access: admission-form (requires authentication)');
+      console.log('  Public can read: articles, authors, categories, about, global, events, admission-forms');
+      console.log('  Authentication endpoints are preserved and accessible');
     }
 
     console.log('\n✓ RBAC setup completed successfully!');
